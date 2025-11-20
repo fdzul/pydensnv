@@ -1,91 +1,89 @@
-def download_densnv(user, password):
-    """
-    This function download the vectors dataset of SINAVE.
-    """
-    import os
-    import time
-    import getpass
-    from selenium import webdriver
-    from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
-    from selenium.webdriver.chrome.options import Options
-    from selenium.common.exceptions import TimeoutException, NoSuchElementException
-    from datetime import datetime
-    import re
-    # ============= CONFIGURACIÓN =============
-    SINAVE_URL = "https://vectores.sinave.gob.mx"
-    DESKTOP_PATH = os.path.join(os.path.expanduser("~"), "Desktop", "SINAVE_Bases")
+import os
+import time
+import getpass
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from datetime import datetime
+import re
 
-    # user and pasword
-    USUARIO = user
-    PASSWORD = password
-    
-    # 11 vectors dataset of SINAVE
-    ENFERMEDADES = [
+# ============= CONFIGURACIÓN =============
+SINAVE_URL = "https://vectores.sinave.gob.mx"
+DESKTOP_PATH = os.path.join(os.path.expanduser("~"), "Desktop", "SINAVE_Bases")
+
+# CREDENCIALES - REEMPLAZA CON TUS DATOS
+
+# ========================================
+
+# Las 11 enfermedades (ETVs) del SINAVE
+ENFERMEDADES = [
     "RICKETT", "CHAGAS", "FIEBRE_NILO", "LEISHMAN", 
     "ENCEFALITIS", "FIEBREMAYARO", "FIEBREAMARILLA", 
     "PALUDISMO", "ZIKA", "CHIKUNGUNYA", "DENGUE"
-    ]
+]
+
+def configurar_driver():
+    """Configura el driver de Chrome en modo headless"""
     
-    def configurar_driver():
-        
-    
-         # Crear carpeta de destino si no existe
-        if not os.path.exists(DESKTOP_PATH):
+    # Crear carpeta de destino si no existe
+    if not os.path.exists(DESKTOP_PATH):
         os.makedirs(DESKTOP_PATH)
     
-        chrome_options = Options()
+    chrome_options = Options()
     
-        # MODO HEADLESS - Sin ventanas visibles
-        chrome_options.add_argument("--headless=new")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-        chrome_options.add_argument("--disable-extensions")
-        chrome_options.add_argument("--disable-software-rasterizer")
-        chrome_options.add_argument("--remote-debugging-port=0")
-        chrome_options.add_argument("--no-first-run")
-        chrome_options.add_argument("--no-default-browser-check")
-        chrome_options.add_argument("--disable-background-timer-throttling")
-        chrome_options.add_argument("--disable-backgrounding-occluded-windows")
-        chrome_options.add_argument("--disable-renderer-backgrounding")
+    # MODO HEADLESS - Sin ventanas visibles
+    chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-software-rasterizer")
+    chrome_options.add_argument("--remote-debugging-port=0")
+    chrome_options.add_argument("--no-first-run")
+    chrome_options.add_argument("--no-default-browser-check")
+    chrome_options.add_argument("--disable-background-timer-throttling")
+    chrome_options.add_argument("--disable-backgrounding-occluded-windows")
+    chrome_options.add_argument("--disable-renderer-backgrounding")
     
-        # Configurar preferencias de descarga para headless
-        prefs = {
-            "download.default_directory": DESKTOP_PATH,
-            "download.prompt_for_download": False,
-            "download.directory_upgrade": True,
-            "safebrowsing.enabled": False,
-            "safebrowsing.disable_download_protection": True,
-            "profile.default_content_setting_values.automatic_downloads": 1,
-            "profile.default_content_settings.popups": 0,
-            "profile.managed_default_content_settings.images": 2,  # Permitir imágenes
-        }
-        chrome_options.add_experimental_option("prefs", prefs)
+    # Configurar preferencias de descarga para headless
+    prefs = {
+        "download.default_directory": DESKTOP_PATH,
+        "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        "safebrowsing.enabled": False,
+        "safebrowsing.disable_download_protection": True,
+        "profile.default_content_setting_values.automatic_downloads": 1,
+        "profile.default_content_settings.popups": 0,
+        "profile.managed_default_content_settings.images": 2,  # Permitir imágenes
+    }
+    chrome_options.add_experimental_option("prefs", prefs)
+    
+    # Silenciar logs innecesarios
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    
+    try:
+        driver = webdriver.Chrome(options=chrome_options)
         
-        # Silenciar logs innecesarios
-        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        # Configurar comportamiento de descarga para headless
+        driver.execute_cdp_cmd("Page.setDownloadBehavior", {
+            "behavior": "allow",
+            "downloadPath": DESKTOP_PATH
+        })
         
-        try:
-            driver = webdriver.Chrome(options=chrome_options)
-            
-            # Configurar comportamiento de descarga para headless
-            driver.execute_cdp_cmd("Page.setDownloadBehavior", {
-                "behavior": "allow",
-                "downloadPath": DESKTOP_PATH
-            })
-            
-            return driver
-        except Exception as e:
-            print(f" Error al configurar Chrome en modo headless: {e}")
-            raise
-    def login_sinave(driver, usuario, password):
-        """Realiza el login en el sistema SINAVE en modo headless"""
+        return driver
+    except Exception as e:
+        print(f"❌ Error al configurar Chrome en modo headless: {e}")
+        raise
+
+def login_sinave(driver, usuario, password):
+    """Realiza el login en el sistema SINAVE en modo headless"""
     
-        print("\n Paso 1: Accediendo a SINAVE (modo headless)...")
+    print("\n📝 Paso 1: Accediendo a SINAVE (modo headless)...")
     
     try:
         driver.get(SINAVE_URL)
@@ -117,7 +115,7 @@ def download_densnv(user, password):
                 continue
         
         if not usuario_field:
-            print("No se encontró el campo de usuario")
+            print("❌ No se encontró el campo de usuario")
             driver.save_screenshot(os.path.join(DESKTOP_PATH, "error_campo_usuario.png"))
             return False
         
@@ -139,12 +137,12 @@ def download_densnv(user, password):
                 continue
         
         if not password_field:
-            print("No se encontró el campo de contraseña")
+            print("❌ No se encontró el campo de contraseña")
             driver.save_screenshot(os.path.join(DESKTOP_PATH, "error_campo_password.png"))
             return False
         
         # Ingresar credenciales
-        print("Ingresando credenciales...")
+        print("📝 Ingresando credenciales...")
         usuario_field.clear()
         usuario_field.send_keys(usuario)
         time.sleep(1)
@@ -171,7 +169,7 @@ def download_densnv(user, password):
                 continue
         
         if not login_button:
-            print("No se encontró el botón de login")
+            print("❌ No se encontró el botón de login")
             driver.save_screenshot(os.path.join(DESKTOP_PATH, "error_boton_login.png"))
             return False
         
@@ -179,11 +177,11 @@ def download_densnv(user, password):
         driver.save_screenshot(os.path.join(DESKTOP_PATH, "02_antes_login.png"))
         
         # Hacer click en el botón de login usando JavaScript (más confiable en headless)
-        print("Enviando formulario de login...")
+        print("🚀 Enviando formulario de login...")
         driver.execute_script("arguments[0].click();", login_button)
         
         # Esperar a que procese el login
-        print("Procesando login...")
+        print("⏳ Procesando login...")
         time.sleep(8)  # Más tiempo para procesar en headless
         
         # Tomar screenshot después del login
@@ -204,23 +202,23 @@ def download_densnv(user, password):
         ]
         
         if any(login_failed_indicators):
-            print("Login falló - aún en página de login o hay errores")
+            print("❌ Login falló - aún en página de login o hay errores")
             driver.save_screenshot(os.path.join(DESKTOP_PATH, "error_login_fallido.png"))
             return False
         
-        print("Login exitoso")
+        print("✅ Login exitoso")
         print(f"📍 URL actual: {current_url}")
         return True
         
     except Exception as e:
-        print(f"Error en login: {str(e)}")
+        print(f"❌ Error en login: {str(e)}")
         driver.save_screenshot(os.path.join(DESKTOP_PATH, "error_login_general.png"))
         return False
+
+def descargar_directamente(driver):
+    """Navega directamente a la página de descarga y descarga los archivos en headless"""
     
-    def descargar_directamente(driver):
-        """Navega directamente a la página de descarga y descarga los archivos en headless"""
-    
-    print("\n Navegando directamente a la página de descarga...")
+    print("\n🚀 Navegando directamente a la página de descarga...")
     
     # URL directa de descarga
     url_descarga = "https://vectores.sinave.gob.mx/Reportes/descargaEdo.aspx?estado=99"
@@ -255,14 +253,14 @@ def download_densnv(user, password):
                 continue
         
         if not tabla:
-            print("No se encontró la tabla de archivos")
+            print("❌ No se encontró la tabla de archivos")
             # Guardar el HTML para debug
             with open(os.path.join(DESKTOP_PATH, "debug_page_source.html"), "w", encoding="utf-8") as f:
                 f.write(driver.page_source)
             return [], []
         
         # Buscar todos los enlaces de descarga
-        print("Buscando enlaces de descarga...")
+        print("📥 Buscando enlaces de descarga...")
         
         # Buscar enlaces dentro de la tabla
         enlaces = tabla.find_elements(By.TAG_NAME, "a")
@@ -298,10 +296,10 @@ def download_densnv(user, password):
             except Exception as e:
                 continue
         
-        print(f"\n Total de archivos identificados: {len(archivos_descargables)}")
+        print(f"\n📊 Total de archivos identificados: {len(archivos_descargables)}")
         
         if len(archivos_descargables) == 0:
-            print(" No se encontraron archivos para descargar")
+            print("❌ No se encontraron archivos para descargar")
             # Guardar lista de todos los enlaces para debug
             with open(os.path.join(DESKTOP_PATH, "debug_enlaces.txt"), "w", encoding="utf-8") as f:
                 for i, enlace in enumerate(enlaces):
@@ -320,70 +318,70 @@ def download_densnv(user, password):
         return descargar_archivos_seleccionados(driver, archivos_filtrados)
         
     except Exception as e:
-        print(f" Error en descarga directa: {str(e)}")
+        print(f"❌ Error en descarga directa: {str(e)}")
         driver.save_screenshot(os.path.join(DESKTOP_PATH, "error_descarga_directa.png"))
         return [], []
+
+def filtrar_archivos_recientes(archivos_descargables):
+    """Filtra los archivos más recientes de cada enfermedad"""
     
-    def filtrar_archivos_recientes(archivos_descargables):
-        """Filtra los archivos más recientes de cada enfermedad"""
+    archivos_por_enfermedad = {}
     
-        archivos_por_enfermedad = {}
-    
-        for archivo in archivos_descargables:
-            try:
-                texto = archivo['texto']
-                enfermedad = archivo['enfermedad']
+    for archivo in archivos_descargables:
+        try:
+            texto = archivo['texto']
+            enfermedad = archivo['enfermedad']
             
-                # Extraer fecha (ej: "19-11-2025")
-                fecha_match = re.search(r'(\d{2})-(\d{2})-(\d{4})', texto)
-                if fecha_match:
-                    dia, mes, anio = fecha_match.groups()
-                    fecha_comparable = f"{anio}{mes}{dia}"  # Formato para comparación
+            # Extraer fecha (ej: "19-11-2025")
+            fecha_match = re.search(r'(\d{2})-(\d{2})-(\d{4})', texto)
+            if fecha_match:
+                dia, mes, anio = fecha_match.groups()
+                fecha_comparable = f"{anio}{mes}{dia}"  # Formato para comparación
                 
-                    # Si es la primera vez que vemos esta enfermedad o encontramos una fecha más reciente
-                    if enfermedad not in archivos_por_enfermedad:
+                # Si es la primera vez que vemos esta enfermedad o encontramos una fecha más reciente
+                if enfermedad not in archivos_por_enfermedad:
+                    archivos_por_enfermedad[enfermedad] = archivo
+                    archivos_por_enfermedad[enfermedad]['fecha'] = fecha_comparable
+                else:
+                    # Comparar fechas y quedarnos con la más reciente
+                    if fecha_comparable > archivos_por_enfermedad[enfermedad]['fecha']:
                         archivos_por_enfermedad[enfermedad] = archivo
                         archivos_por_enfermedad[enfermedad]['fecha'] = fecha_comparable
-                    else:
-                        # Comparar fechas y quedarnos con la más reciente
-                        if fecha_comparable > archivos_por_enfermedad[enfermedad]['fecha']:
-                            archivos_por_enfermedad[enfermedad] = archivo
-                            archivos_por_enfermedad[enfermedad]['fecha'] = fecha_comparable
-                else:
-                    # Si no tiene fecha, lo agregamos de todas formas
-                    if enfermedad not in archivos_por_enfermedad:
-                        archivos_por_enfermedad[enfermedad] = archivo
-                        archivos_por_enfermedad[enfermedad]['fecha'] = "00000000"
+            else:
+                # Si no tiene fecha, lo agregamos de todas formas
+                if enfermedad not in archivos_por_enfermedad:
+                    archivos_por_enfermedad[enfermedad] = archivo
+                    archivos_por_enfermedad[enfermedad]['fecha'] = "00000000"
                         
-            except Exception as e:
-                print(f"⚠ Error procesando archivo {archivo['texto']}: {str(e)}")
-                continue
+        except Exception as e:
+            print(f"⚠ Error procesando archivo {archivo['texto']}: {str(e)}")
+            continue
     
-        print(f"\n Archivos más recientes a descargar ({len(archivos_por_enfermedad)}):")
-        for enfermedad, archivo in archivos_por_enfermedad.items():
-            print(f"  • {enfermedad}: {archivo['texto']}")
+    print(f"\n🎯 Archivos más recientes a descargar ({len(archivos_por_enfermedad)}):")
+    for enfermedad, archivo in archivos_por_enfermedad.items():
+        print(f"  • {enfermedad}: {archivo['texto']}")
     
-        return list(archivos_por_enfermedad.values())
+    return list(archivos_por_enfermedad.values())
 
-    def descargar_archivos_seleccionados(driver, archivos_filtrados):
-        """Descarga los archivos seleccionados en modo headless"""
+def descargar_archivos_seleccionados(driver, archivos_filtrados):
+    """Descarga los archivos seleccionados en modo headless"""
     
-        bases_exitosas = []
-        bases_fallidas = []
+    bases_exitosas = []
+    bases_fallidas = []
     
-        total_archivos = len(archivos_filtrados)
+    total_archivos = len(archivos_filtrados)
     
-        if total_archivos == 0:
-            print("No se encontraron archivos para descargar")
-            return [], []
+    if total_archivos == 0:
+        print("❌ No se encontraron archivos para descargar")
+        return [], []
     
-        print(f"\n Iniciando descarga de {total_archivos} archivos en modo headless...")
+    print(f"\n🚀 Iniciando descarga de {total_archivos} archivos en modo headless...")
     
-        for i, archivo in enumerate(archivos_filtrados, 1):
-            nombre_archivo = archivo['texto']
-            enlace = archivo['enlace']
-            enfermedad = archivo['enfermedad']
-            href = archivo['href']
+    for i, archivo in enumerate(archivos_filtrados, 1):
+        nombre_archivo = archivo['texto']
+        enlace = archivo['enlace']
+        enfermedad = archivo['enfermedad']
+        href = archivo['href']
         
         print(f"\n{'='*50}")
         print(f"[{i}/{total_archivos}] Descargando: {enfermedad}")
@@ -396,12 +394,12 @@ def download_densnv(user, password):
             
             # Método 1: Navegar directamente al href (más confiable en headless)
             if href and 'Archivo.aspx' in href:
-                print("Navegando directamente a la URL de descarga...")
+                print("   📥 Navegando directamente a la URL de descarga...")
                 driver.get(href)
                 time.sleep(3)
             else:
                 # Método 2: Hacer click en el enlace
-                print("Haciendo click en el enlace...")
+                print("   🖱️ Haciendo click en el enlace...")
                 driver.execute_script("arguments[0].scrollIntoView(true);", enlace)
                 time.sleep(1)
                 driver.execute_script("arguments[0].click();", enlace)
@@ -409,14 +407,14 @@ def download_densnv(user, password):
             # Esperar a que se complete la descarga
             if esperar_descarga_completa(archivos_antes, nombre_archivo):
                 bases_exitosas.append(nombre_archivo)
-                print(f"Descarga completada: {nombre_archivo}")
+                print(f"   ✅ Descarga completada: {nombre_archivo}")
             else:
                 bases_fallidas.append(nombre_archivo)
-                print(f"Error en descarga: {nombre_archivo}")
+                print(f"   ❌ Error en descarga: {nombre_archivo}")
             
             # Volver a la página de descargas si es necesario
             if i < total_archivos:
-                print("Volviendo a la página de descargas...")
+                print("   🔄 Volviendo a la página de descargas...")
                 driver.get("https://vectores.sinave.gob.mx/Reportes/descargaEdo.aspx?estado=99")
                 time.sleep(3)
             
@@ -424,15 +422,15 @@ def download_densnv(user, password):
             time.sleep(2)
             
         except Exception as e:
-            print(f"Error: {str(e)}")
+            print(f"   ❌ Error: {str(e)}")
             bases_fallidas.append(nombre_archivo)
     
-        return bases_exitosas, bases_fallidas
+    return bases_exitosas, bases_fallidas
 
-    def esperar_descarga_completa(archivos_antes, nombre_esperado, timeout=45):
-        """Espera a que se complete una descarga en modo headless"""
+def esperar_descarga_completa(archivos_antes, nombre_esperado, timeout=45):
+    """Espera a que se complete una descarga en modo headless"""
     
-    print("Esperando que se complete la descarga...")
+    print("   ⏳ Esperando que se complete la descarga...")
     
     for intento in range(timeout):
         time.sleep(2)  # Mayor tiempo entre verificaciones en headless
@@ -463,13 +461,13 @@ def download_densnv(user, password):
         if (intento + 1) % 5 == 0:
             print(f"   ... esperando ({(intento + 1) * 2}s)")
     
-    print(f" Timeout: La descarga no se completó en {timeout*2} segundos")
+    print(f"   ❌ Timeout: La descarga no se completó en {timeout*2} segundos")
     return False
 
-    def verificar_descargas_completas(bases_exitosas):
-        """Verifica que todas las descargas se completaron correctamente"""
+def verificar_descargas_completas(bases_exitosas):
+    """Verifica que todas las descargas se completaron correctamente"""
     
-    print("\n Verificando descargas completas...")
+    print("\n🔍 Verificando descargas completas...")
     
     archivos_descargados = os.listdir(DESKTOP_PATH)
     verificacion = []
@@ -484,17 +482,16 @@ def download_densnv(user, password):
                     verificacion.append((base, "✅", archivo))
                     break
         else:
-            verificacion.append((base,  "No encontrado"))
+            verificacion.append((base, "❌", "No encontrado"))
     
     print("\nResultado de la verificación:")
     for archivo, estado, nombre_real in verificacion:
         print(f"  {estado} {archivo} -> {nombre_real}")
     
-    return all(estado == "" for _, estado, _ in verificacion)
-    
-    
-    def generar_reporte(bases_exitosas, bases_fallidas):
-        """Genera un reporte de las descargas realizadas"""
+    return all(estado == "✅" for _, estado, _ in verificacion)
+
+def generar_reporte(bases_exitosas, bases_fallidas):
+    """Genera un reporte de las descargas realizadas"""
     
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
@@ -510,12 +507,12 @@ ARCHIVOS DESCARGADOS EXITOSAMENTE ({len(bases_exitosas)}):
 """
     
     for base in bases_exitosas:
-        reporte += f"  {base}\n"
+        reporte += f"  ✅ {base}\n"
     
     if bases_fallidas:
         reporte += f"\nARCHIVOS CON ERRORES ({len(bases_fallidas)}):\n"
         for base in bases_fallidas:
-            reporte += f"  {base}\n"
+            reporte += f"  ❌ {base}\n"
     
     # Verificar qué enfermedades faltan
     enfermedades_descargadas = set()
@@ -528,9 +525,9 @@ ARCHIVOS DESCARGADOS EXITOSAMENTE ({len(bases_exitosas)}):
     enfermedades_faltantes = set(ENFERMEDADES) - enfermedades_descargadas
     
     if enfermedades_faltantes:
-        reporte += f"\n  ENFERMEDADES SIN DATOS DESCARGADOS ({len(enfermedades_faltantes)}):\n"
+        reporte += f"\n⚠️  ENFERMEDADES SIN DATOS DESCARGADOS ({len(enfermedades_faltantes)}):\n"
         for enf in enfermedades_faltantes:
-            reporte += f"    {enf}\n"
+            reporte += f"  ⚠️  {enf}\n"
     
     reporte += f"\n{'='*60}\n"
     
@@ -540,12 +537,12 @@ ARCHIVOS DESCARGADOS EXITOSAMENTE ({len(bases_exitosas)}):
         f.write(reporte)
     
     print(reporte)
-    print(f" Reporte guardado en: {reporte_path}")
+    print(f"📄 Reporte guardado en: {reporte_path}")
     
     return reporte
-    
-    def main():
-        """Función principal del script"""
+
+def main():
+    """Función principal del script"""
     
     print("""
     ╔═══════════════════════════════════════════════════════════╗
@@ -556,38 +553,38 @@ ARCHIVOS DESCARGADOS EXITOSAMENTE ({len(bases_exitosas)}):
     
     # Verificar credenciales
     if USUARIO == "pon el usuario" or PASSWORD == "pon la clave":
-        print(" ERROR: Debes configurar tus credenciales en el script")
+        print("❌ ERROR: Debes configurar tus credenciales en el script")
         print("    Edita USUARIO y PASSWORD en las líneas 14-15")
         return
     
     driver = None
     
     try:
-        print(" Iniciando proceso en MODO HEADLESS...")
+        print("🚀 Iniciando proceso en MODO HEADLESS...")
         print("   El navegador trabajará en segundo plano sin mostrar ventanas\n")
         
         # Configurar driver en modo headless
         driver = configurar_driver()
-        print(" Navegador configurado en modo headless")
+        print("✅ Navegador configurado en modo headless")
         
         # Login
-        print("\n Iniciando sesión en SINAVE...")
+        print("\n🔐 Iniciando sesión en SINAVE...")
         if not login_sinave(driver, USUARIO, PASSWORD):
-            print("\n No se pudo completar el login.")
-            print(" Revisa los screenshots en el escritorio para debug")
+            print("\n❌ No se pudo completar el login.")
+            print("💡 Revisa los screenshots en el escritorio para debug")
             return
         
         # Descargar archivos directamente
-        print("\n Iniciando proceso de descarga...")
+        print("\n📥 Iniciando proceso de descarga...")
         bases_exitosas, bases_fallidas = descargar_directamente(driver)
         
         # Verificar descargas
         if bases_exitosas:
-            print("\n Verificando integridad de las descargas...")
+            print("\n✅ Verificando integridad de las descargas...")
             verificar_descargas_completas(bases_exitosas)
         
         # Generar reporte
-        print("\n Generando reporte final...")
+        print("\n📊 Generando reporte final...")
         generar_reporte(bases_exitosas, bases_fallidas)
         
         print(f"\n🎉 ¡Proceso completado exitosamente!")
@@ -595,19 +592,15 @@ ARCHIVOS DESCARGADOS EXITOSAMENTE ({len(bases_exitosas)}):
         print(f"🔍 Revisa la carpeta para ver los archivos descargados")
         
     except Exception as e:
-        print(f"\n Error general: {str(e)}")
+        print(f"\n❌ Error general: {str(e)}")
         import traceback
         traceback.print_exc()
         
     finally:
         if driver:
-            print("\n Cerrando navegador headless...")
+            print("\n🔒 Cerrando navegador headless...")
             driver.quit()
-            print(" Navegador cerrado")
+            print("✅ Navegador cerrado")
 
 if __name__ == "__main__":
     main()
-        
-  
-  
-
