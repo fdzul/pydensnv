@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "pydensnv"
+version = "0.1.0"
+description = "El objetivo central del paquete densnv es realizar el análisis exploratorio de las bases de datos de las ETVs e IVAs del SINAVE a través de graficos, tablas y mapas con el objetivo de incidir de manera directa en la toma de desiciones racionales y oportunas en los programas de ETVs"
+authors = ["Felipe Antonio Dzul Manzanilla"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
