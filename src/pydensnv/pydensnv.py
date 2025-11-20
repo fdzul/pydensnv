@@ -10,7 +10,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from datetime import datetime
 import re
 
-# ============= CONFIGURACIÓN =============
+# ============= setup =============
 SINAVE_URL = "https://vectores.sinave.gob.mx"
 DESKTOP_PATH = os.path.join(os.path.expanduser("~"), "Desktop", "SINAVE_Bases")
 
@@ -92,7 +92,7 @@ def login_sinave(driver, usuario, password):
         print(" Esperando que cargue la página de login...")
         time.sleep(3)
         
-        # Tomar screenshot para debug (útil en headless)
+        # Tomar screenshot para debug (util en headless)
         driver.save_screenshot(os.path.join(DESKTOP_PATH, "01_pagina_login.png"))
         
         print(" Paso 2: Ingresando credenciales...")
@@ -151,7 +151,7 @@ def login_sinave(driver, usuario, password):
         password_field.send_keys(password)
         time.sleep(1)
         
-        # Botón de login
+        # Boton de login
         login_button = None
         selectores_button = [
             (By.NAME, "ctl00$cphContent$Login1$LoginButton"),
@@ -182,9 +182,9 @@ def login_sinave(driver, usuario, password):
         
         # Esperar a que procese el login
         print(" Procesando login...")
-        time.sleep(8)  # Más tiempo para procesar en headless
+        time.sleep(8)  # Mas tiempo para procesar en headless
         
-        # Tomar screenshot después del login
+        # Tomar screenshot despues del login
         driver.save_screenshot(os.path.join(DESKTOP_PATH, "03_despues_login.png"))
         
         # Verificar si el login fue exitoso
@@ -230,7 +230,7 @@ def descargar_directamente(driver):
         print("⏳ Esperando que cargue la página de descarga...")
         time.sleep(5)
         
-        # Tomar screenshot de la página de descarga
+        # Tomar screenshot de la pagina de descarga
         driver.save_screenshot(os.path.join(DESKTOP_PATH, "04_pagina_descarga.png"))
         
         print("🔍 Buscando tabla de archivos...")
@@ -266,7 +266,7 @@ def descargar_directamente(driver):
         enlaces = tabla.find_elements(By.TAG_NAME, "a")
         print(f"✓ Se encontraron {len(enlaces)} enlaces en la tabla")
         
-        # Si no hay enlaces en la tabla, buscar en toda la página
+        # Si no hay enlaces en la tabla, buscar en toda la pagina
         if len(enlaces) == 0:
             print("⚠ No hay enlaces en la tabla, buscando en toda la página...")
             enlaces = driver.find_elements(By.TAG_NAME, "a")
@@ -392,7 +392,7 @@ def descargar_archivos_seleccionados(driver, archivos_filtrados):
             # Contar archivos antes de la descarga
             archivos_antes = set(os.listdir(DESKTOP_PATH))
             
-            # Método 1: Navegar directamente al href (más confiable en headless)
+            # Método 1: Navegar directamente al href (mas confiable en headless)
             if href and 'Archivo.aspx' in href:
                 print("   📥 Navegando directamente a la URL de descarga...")
                 driver.get(href)
@@ -412,7 +412,7 @@ def descargar_archivos_seleccionados(driver, archivos_filtrados):
                 bases_fallidas.append(nombre_archivo)
                 print(f"  Error en descarga: {nombre_archivo}")
             
-            # Volver a la página de descargas si es necesario
+            # Volver a la pagina de descargas si es necesario
             if i < total_archivos:
                 print("   🔄 Volviendo a la página de descargas...")
                 driver.get("https://vectores.sinave.gob.mx/Reportes/descargaEdo.aspx?estado=99")
@@ -453,7 +453,7 @@ def esperar_descarga_completa(archivos_antes, nombre_esperado, timeout=45):
         )
         
         if not descarga_activa and intento > 2 and nuevos_archivos:
-            # Si no hay descarga activa después de unos segundos y hay nuevos archivos
+            # Si no hay descarga activa despues de unos segundos y hay nuevos archivos
             archivo_descargado = list(nuevos_archivos)[0]
             print(f"   ⚠ Se descargó: {archivo_descargado}")
             return True
@@ -514,7 +514,7 @@ ARCHIVOS DESCARGADOS EXITOSAMENTE ({len(bases_exitosas)}):
         for base in bases_fallidas:
             reporte += f"  ❌ {base}\n"
     
-    # Verificar qué enfermedades faltan
+    # Verificar que enfermedades faltan
     enfermedades_descargadas = set()
     for base in bases_exitosas:
         for enfermedad in ENFERMEDADES:
