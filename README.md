@@ -1,6 +1,6 @@
 # pydensnv
 
-El objetivo central del paquete densnv es realizar el analisis exploratorio de las bases de datos de las ETVs e IVAs del SINAVE a traves de graficos, tablas y mapas con el objetivo de incidir de manera directa en la toma de decisiones racionales y oportunas en los programas de ETVs
+The central objective of the densnv package is to perform exploratory analysis of the SINAVE databases of ETVs and IVAs through graphs, tables and maps with the aim of directly influencing rational and timely decision-making in ETV programs
 
 ## Installation
 
