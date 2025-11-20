@@ -77,25 +77,25 @@ def configurar_driver():
         
         return driver
     except Exception as e:
-        print(f"❌ Error al configurar Chrome en modo headless: {e}")
+        print(f" Error al configurar Chrome en modo headless: {e}")
         raise
 
 def login_sinave(driver, usuario, password):
     """Realiza el login en el sistema SINAVE en modo headless"""
     
-    print("\n📝 Paso 1: Accediendo a SINAVE (modo headless)...")
+    print("\n Paso 1: Accediendo a SINAVE (modo headless)...")
     
     try:
         driver.get(SINAVE_URL)
         wait = WebDriverWait(driver, 25)  # Mayor tiempo de espera para headless
         
-        print("⏳ Esperando que cargue la página de login...")
+        print(" Esperando que cargue la página de login...")
         time.sleep(3)
         
         # Tomar screenshot para debug (útil en headless)
         driver.save_screenshot(os.path.join(DESKTOP_PATH, "01_pagina_login.png"))
         
-        print("🔐 Paso 2: Ingresando credenciales...")
+        print(" Paso 2: Ingresando credenciales...")
         
         # Campo de usuario
         usuario_field = None
@@ -115,7 +115,7 @@ def login_sinave(driver, usuario, password):
                 continue
         
         if not usuario_field:
-            print("❌ No se encontró el campo de usuario")
+            print(" No se encontró el campo de usuario")
             driver.save_screenshot(os.path.join(DESKTOP_PATH, "error_campo_usuario.png"))
             return False
         
@@ -137,12 +137,12 @@ def login_sinave(driver, usuario, password):
                 continue
         
         if not password_field:
-            print("❌ No se encontró el campo de contraseña")
+            print(" No se encontró el campo de contraseña")
             driver.save_screenshot(os.path.join(DESKTOP_PATH, "error_campo_password.png"))
             return False
         
         # Ingresar credenciales
-        print("📝 Ingresando credenciales...")
+        print(" Ingresando credenciales...")
         usuario_field.clear()
         usuario_field.send_keys(usuario)
         time.sleep(1)
@@ -169,7 +169,7 @@ def login_sinave(driver, usuario, password):
                 continue
         
         if not login_button:
-            print("❌ No se encontró el botón de login")
+            print(" No se encontró el botón de login")
             driver.save_screenshot(os.path.join(DESKTOP_PATH, "error_boton_login.png"))
             return False
         
@@ -177,11 +177,11 @@ def login_sinave(driver, usuario, password):
         driver.save_screenshot(os.path.join(DESKTOP_PATH, "02_antes_login.png"))
         
         # Hacer click en el botón de login usando JavaScript (más confiable en headless)
-        print("🚀 Enviando formulario de login...")
+        print(" Enviando formulario de login...")
         driver.execute_script("arguments[0].click();", login_button)
         
         # Esperar a que procese el login
-        print("⏳ Procesando login...")
+        print(" Procesando login...")
         time.sleep(8)  # Más tiempo para procesar en headless
         
         # Tomar screenshot después del login
@@ -202,16 +202,16 @@ def login_sinave(driver, usuario, password):
         ]
         
         if any(login_failed_indicators):
-            print("❌ Login falló - aún en página de login o hay errores")
+            print(" Login falló - aún en página de login o hay errores")
             driver.save_screenshot(os.path.join(DESKTOP_PATH, "error_login_fallido.png"))
             return False
         
-        print("✅ Login exitoso")
-        print(f"📍 URL actual: {current_url}")
+        print(" Login exitoso")
+        print(f" URL actual: {current_url}")
         return True
         
     except Exception as e:
-        print(f"❌ Error en login: {str(e)}")
+        print(f" Error en login: {str(e)}")
         driver.save_screenshot(os.path.join(DESKTOP_PATH, "error_login_general.png"))
         return False
 
@@ -253,14 +253,14 @@ def descargar_directamente(driver):
                 continue
         
         if not tabla:
-            print("❌ No se encontró la tabla de archivos")
+            print(" No se encontró la tabla de archivos")
             # Guardar el HTML para debug
             with open(os.path.join(DESKTOP_PATH, "debug_page_source.html"), "w", encoding="utf-8") as f:
                 f.write(driver.page_source)
             return [], []
         
         # Buscar todos los enlaces de descarga
-        print("📥 Buscando enlaces de descarga...")
+        print(" Buscando enlaces de descarga...")
         
         # Buscar enlaces dentro de la tabla
         enlaces = tabla.find_elements(By.TAG_NAME, "a")
@@ -296,10 +296,10 @@ def descargar_directamente(driver):
             except Exception as e:
                 continue
         
-        print(f"\n📊 Total de archivos identificados: {len(archivos_descargables)}")
+        print(f"\n Total de archivos identificados: {len(archivos_descargables)}")
         
         if len(archivos_descargables) == 0:
-            print("❌ No se encontraron archivos para descargar")
+            print(" No se encontraron archivos para descargar")
             # Guardar lista de todos los enlaces para debug
             with open(os.path.join(DESKTOP_PATH, "debug_enlaces.txt"), "w", encoding="utf-8") as f:
                 for i, enlace in enumerate(enlaces):
@@ -318,7 +318,7 @@ def descargar_directamente(driver):
         return descargar_archivos_seleccionados(driver, archivos_filtrados)
         
     except Exception as e:
-        print(f"❌ Error en descarga directa: {str(e)}")
+        print(f" Error en descarga directa: {str(e)}")
         driver.save_screenshot(os.path.join(DESKTOP_PATH, "error_descarga_directa.png"))
         return [], []
 
@@ -372,10 +372,10 @@ def descargar_archivos_seleccionados(driver, archivos_filtrados):
     total_archivos = len(archivos_filtrados)
     
     if total_archivos == 0:
-        print("❌ No se encontraron archivos para descargar")
+        print(" No se encontraron archivos para descargar")
         return [], []
     
-    print(f"\n🚀 Iniciando descarga de {total_archivos} archivos en modo headless...")
+    print(f"\n Iniciando descarga de {total_archivos} archivos en modo headless...")
     
     for i, archivo in enumerate(archivos_filtrados, 1):
         nombre_archivo = archivo['texto']
@@ -410,7 +410,7 @@ def descargar_archivos_seleccionados(driver, archivos_filtrados):
                 print(f"   ✅ Descarga completada: {nombre_archivo}")
             else:
                 bases_fallidas.append(nombre_archivo)
-                print(f"   ❌ Error en descarga: {nombre_archivo}")
+                print(f"  Error en descarga: {nombre_archivo}")
             
             # Volver a la página de descargas si es necesario
             if i < total_archivos:
@@ -422,7 +422,7 @@ def descargar_archivos_seleccionados(driver, archivos_filtrados):
             time.sleep(2)
             
         except Exception as e:
-            print(f"   ❌ Error: {str(e)}")
+            print(f"    Error: {str(e)}")
             bases_fallidas.append(nombre_archivo)
     
     return bases_exitosas, bases_fallidas
@@ -461,7 +461,7 @@ def esperar_descarga_completa(archivos_antes, nombre_esperado, timeout=45):
         if (intento + 1) % 5 == 0:
             print(f"   ... esperando ({(intento + 1) * 2}s)")
     
-    print(f"   ❌ Timeout: La descarga no se completó en {timeout*2} segundos")
+    print(f"   Timeout: La descarga no se completó en {timeout*2} segundos")
     return False
 
 def verificar_descargas_completas(bases_exitosas):
